@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { LayoutGrid, Settings } from 'lucide-react'
 import { LAST_UPDATED, ventures } from './data/ventures'
+import { getWebhookUrl } from './lib/actionBridge'
 import { FilterChips, type FilterKey } from './components/FilterChips'
 import {
   BlockersPanel,
@@ -38,6 +39,15 @@ export default function App() {
   const [filter, setFilter] = useState<FilterKey>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [webhookConfigured, setWebhookConfigured] = useState(true)
+
+  function refreshWebhookFlag() {
+    setWebhookConfigured(Boolean(getWebhookUrl()))
+  }
+
+  useEffect(() => {
+    refreshWebhookFlag()
+  }, [])
 
   const openBlockers = useMemo(() => collectOpenBlockers(ventures), [])
 
@@ -102,6 +112,26 @@ export default function App() {
           </div>
         </header>
 
+        {!webhookConfigured && (
+          <div
+            className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
+            role="status"
+          >
+            <p className="font-medium">Webhook not set</p>
+            <p className="mt-1 text-amber-100/90">
+              Open Settings and paste the Boss webhook URL (and Authorization
+              if required) before sending actions.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              className="mt-2 rounded-lg bg-amber-400/90 px-3 py-1.5 text-xs font-semibold text-surface-950 hover:bg-amber-300"
+            >
+              Open Settings
+            </button>
+          </div>
+        )}
+
         <div className="mb-6">
           <FilterChips value={filter} onChange={setFilter} counts={counts} />
         </div>
@@ -145,7 +175,11 @@ export default function App() {
         </footer>
       </div>
 
-      <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsPanel
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onSaved={refreshWebhookFlag}
+      />
     </div>
   )
 }

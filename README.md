@@ -32,25 +32,27 @@ npm run build
 
 Live site: https://rialclark.github.io/venture-hq/
 
-## Boss webhook (Next-step actions)
+## Boss webhook (Suggest then Send)
 
-Each venture card has an action button (for example "Ask RWH bot") that POSTs JSON to a Boss webhook so Boss can ping the matching Grok Bot.
+Each venture card has a **Suggest** action. Clicking it opens an inline panel: review the suggested action, edit the prefilled work-order message, then **Send to {bot}** (or Copy / Cancel). Suggest never auto-sends.
 
 1. In Boss, open the routine named **Venture HQ Actions**.
-2. Copy the webhook URL from the routine panel.
-3. On the Venture HQ site, open **Settings** (gear in the header), paste the URL, and Save.
+2. Copy the webhook URL (and Authorization value if shown) from the routine panel.
+3. On the Venture HQ site, open **Settings** (gear in the header), paste the URL and optional Authorization, then Save.
 4. Optional: click **Test ping** to confirm the webhook receives a request.
-5. Use a venture action button. The payload includes `ventureId`, `botId`, `botName`, `nextStep`, and blocker summaries.
+5. Use **Suggest**, edit the message, then **Send**. The payload includes `ventureId`, `botId`, `botName`, `suggestedAction`, `message`, `nextStep`, and blocker summaries.
 
-The webhook URL is stored only in this browser via `localStorage` key `venture-hq-webhook-url`.
+Stored only in this browser:
+- `localStorage` key `venture-hq-webhook-url`
+- `localStorage` key `venture-hq-webhook-auth` (Authorization header value)
 
-If no webhook is set, action buttons show "Set webhook in Settings". You can still use **Copy prompt** to copy a text summary to the clipboard.
+If no webhook URL is set, a banner prompts you to open Settings. Send shows "Set webhook first". Authorization is included on every POST when saved.
 
 ## Edit venture data
 
 All seed data lives in `src/data/ventures.ts`.
 
-Update `ventures` for status, blockers, activity, next steps, notes, and bot fields (`botName`, `botId`, `actionLabel`). Bump `LAST_UPDATED` when you change anything.
+Update `ventures` for status, blockers, activity, next steps, notes, and bot fields (`botName`, `botId`, `actionLabel`, optional `suggestedAction`). Bump `LAST_UPDATED` when you change anything.
 
 ### Status values
 

@@ -1,45 +1,52 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import {
+  getWebhookAuth,
   getWebhookUrl,
   pingWebhook,
-  setWebhookUrl,
+  saveWebhookSettings,
 } from '../lib/actionBridge'
 
 export function SettingsPanel({
   open,
   onClose,
+  onSaved,
 }: {
   open: boolean
   onClose: () => void
+  onSaved?: () => void
 }) {
   const [url, setUrl] = useState('')
+  const [auth, setAuth] = useState('')
   const [status, setStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     if (open) {
       setUrl(getWebhookUrl())
+      setAuth(getWebhookAuth())
       setStatus(null)
     }
   }, [open])
 
   if (!open) return null
 
-  async function handleSave() {
-    const result = setWebhookUrl(url)
+  function handleSave() {
+    const result = saveWebhookSettings(url, auth)
     setStatus(result.message)
+    if (result.ok) onSaved?.()
   }
 
   async function handlePing() {
     setBusy(true)
     setStatus('Sending...')
-    const save = setWebhookUrl(url)
-    if (!save.ok && url.trim()) {
+    const save = saveWebhookSettings(url, auth)
+    if (!save.ok) {
       setStatus(save.message)
       setBusy(false)
       return
     }
+    onSaved?.()
     const result = await pingWebhook()
     setStatus(result.message)
     setBusy(false)
@@ -67,8 +74,8 @@ export function SettingsPanel({
             </h2>
             <p className="mt-1 text-sm text-ink-300">
               Paste the Boss webhook URL from the Venture HQ Actions routine
-              panel. Action buttons POST here so Boss can ping the matching
-              Grok Bot.
+              panel. Include the Authorization value if the webhook requires
+              it (Bearer token or full header value).
             </p>
           </div>
           <button
@@ -93,6 +100,23 @@ export function SettingsPanel({
             spellCheck={false}
           />
         </label>
+
+        <label className="mt-3 block text-xs font-semibold uppercase tracking-wider text-ink-400">
+          Authorization header (optional)
+          <input
+            type="password"
+            value={auth}
+            onChange={(e) => setAuth(e.target.value)}
+            placeholder="Bearer ... or raw token"
+            className="mt-1.5 w-full rounded-xl border border-surface-700 bg-surface-850 px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-ink-100 placeholder:text-ink-400 focus:border-emerald-500/40 focus:outline-none"
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </label>
+        <p className="mt-1.5 text-xs text-ink-400">
+          Stored only in this browser. Sent as the Authorization header on
+          every webhook POST.
+        </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <button

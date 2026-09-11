@@ -43,10 +43,12 @@ export interface Venture {
   botName: string
   botId: string
   actionLabel: string
+  /** Short suggested action for the Suggest panel; defaults to nextStep when omitted */
+  suggestedAction?: string
 }
 
 /** ISO timestamp used for "Last updated" in the header. Update when you edit this file. */
-export const LAST_UPDATED = '2026-09-10T19:05:00-07:00'
+export const LAST_UPDATED = '2026-09-10T19:30:00-07:00'
 
 export const ventures: Venture[] = [
   {

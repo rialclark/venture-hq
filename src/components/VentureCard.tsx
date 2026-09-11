@@ -2,10 +2,18 @@ import { useState, type MouseEvent } from 'react'
 import { ChevronDown, ClipboardCopy, ExternalLink, MapPin } from 'lucide-react'
 import type { Venture } from '../data/ventures'
 import {
-  copyVenturePrompt,
+  buildWorkOrderPrompt,
+  copyText,
   dispatchVentureAction,
+  getSuggestedAction,
 } from '../lib/actionBridge'
 import { StatusPill } from './StatusPill'
+
+function suggestLabel(venture: Venture): string {
+  const label = venture.actionLabel.trim()
+  if (/^suggest\b/i.test(label)) return label
+  return `Suggest ${label}`
+}
 
 export function VentureCard({
   venture,
@@ -18,21 +26,45 @@ export function VentureCard({
 }) {
   const topBlocker = venture.blockers[0]
   const recent = venture.activity.slice(0, 2)
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [message, setMessage] = useState('')
+  const [suggestedDraft, setSuggestedDraft] = useState('')
   const [actionStatus, setActionStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  async function handleAction(e: MouseEvent) {
+  function openSuggestPanel(e: MouseEvent) {
+    e.stopPropagation()
+    setSuggestedDraft(getSuggestedAction(venture))
+    setMessage(buildWorkOrderPrompt(venture))
+    setActionStatus(null)
+    setPanelOpen(true)
+  }
+
+  function closePanel(e?: MouseEvent) {
+    e?.stopPropagation()
+    setPanelOpen(false)
+    setBusy(false)
+  }
+
+  async function handleSend(e: MouseEvent) {
     e.stopPropagation()
     setBusy(true)
     setActionStatus('Sending...')
-    const result = await dispatchVentureAction(venture)
+    const result = await dispatchVentureAction(
+      venture,
+      message,
+      suggestedDraft,
+    )
     setActionStatus(result.message)
     setBusy(false)
+    if (result.ok) {
+      setPanelOpen(false)
+    }
   }
 
   async function handleCopy(e: MouseEvent) {
     e.stopPropagation()
-    const result = await copyVenturePrompt(venture)
+    const result = await copyText(message)
     setActionStatus(result.message)
   }
 
@@ -110,24 +142,76 @@ export function VentureCard({
       </button>
 
       <div className="border-t border-surface-800 px-5 py-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={handleAction}
-            disabled={busy}
-            className="rounded-xl bg-emerald-500/90 px-3.5 py-2 text-sm font-semibold text-surface-950 hover:bg-emerald-400 disabled:opacity-60"
+        {!panelOpen ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={openSuggestPanel}
+              className="rounded-xl bg-emerald-500/90 px-3.5 py-2 text-sm font-semibold text-surface-950 hover:bg-emerald-400"
+            >
+              {suggestLabel(venture)}
+            </button>
+          </div>
+        ) : (
+          <div
+            className="space-y-3"
+            onClick={(e) => e.stopPropagation()}
           >
-            {venture.actionLabel}
-          </button>
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-surface-600 bg-surface-850 px-2.5 py-2 text-xs font-medium text-ink-200 hover:border-surface-500 hover:bg-surface-800"
-          >
-            <ClipboardCopy className="h-3.5 w-3.5" aria-hidden />
-            Copy prompt
-          </button>
-        </div>
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-400">
+                Suggested action
+                <textarea
+                  value={suggestedDraft}
+                  onChange={(e) => setSuggestedDraft(e.target.value)}
+                  rows={2}
+                  className="mt-1.5 w-full resize-y rounded-xl border border-surface-700 bg-surface-850 px-3 py-2 text-sm font-normal normal-case tracking-normal text-ink-200 placeholder:text-ink-400 focus:border-emerald-500/40 focus:outline-none"
+                />
+              </label>
+              <p className="mt-1 text-[11px] text-ink-400">
+                Lightly editable. Your message below is what gets sent.
+              </p>
+            </div>
+
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-400">
+              Your message
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={8}
+                className="mt-1.5 w-full resize-y rounded-xl border border-surface-700 bg-surface-850 px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-ink-100 placeholder:text-ink-400 focus:border-emerald-500/40 focus:outline-none"
+                spellCheck
+              />
+            </label>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSend}
+                disabled={busy}
+                className="rounded-xl bg-emerald-500/90 px-3.5 py-2 text-sm font-semibold text-surface-950 hover:bg-emerald-400 disabled:opacity-60"
+              >
+                Send to {venture.botName}
+              </button>
+              <button
+                type="button"
+                onClick={handleCopy}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-surface-600 bg-surface-850 px-2.5 py-2 text-xs font-medium text-ink-200 hover:border-surface-500 hover:bg-surface-800 disabled:opacity-60"
+              >
+                <ClipboardCopy className="h-3.5 w-3.5" aria-hidden />
+                Copy
+              </button>
+              <button
+                type="button"
+                onClick={closePanel}
+                disabled={busy}
+                className="rounded-xl border border-transparent px-2.5 py-2 text-xs font-medium text-ink-300 hover:text-ink-100 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
         {actionStatus && (
           <p className="mt-2 text-xs text-ink-300" role="status">
             {actionStatus}
