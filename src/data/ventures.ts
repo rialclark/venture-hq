@@ -40,10 +40,13 @@ export interface Venture {
   nextStep?: string
   notes?: string[]
   metrics?: Metric[]
+  botName: string
+  botId: string
+  actionLabel: string
 }
 
 /** ISO timestamp used for "Last updated" in the header. Update when you edit this file. */
-export const LAST_UPDATED = '2026-09-10T17:58:00-07:00'
+export const LAST_UPDATED = '2026-09-10T19:05:00-07:00'
 
 export const ventures: Venture[] = [
   {
@@ -53,6 +56,9 @@ export const ventures: Venture[] = [
     tagline: 'Marketplace ops across Nifty, Whatnot, and eBay as Rial',
     kind: 'Marketplace',
     status: 'parked',
+    botName: 'RWH - Online',
+    botId: '00d3adac-214b-4229-b14c-5370c6f3899f',
+    actionLabel: 'Ask RWH bot',
     blockers: [
       {
         id: 'rwh-offsite',
@@ -83,6 +89,9 @@ export const ventures: Venture[] = [
     website: 'https://aboveyourask.com',
     kind: 'Brokerage',
     status: 'blocked',
+    botName: 'AYA - Online',
+    botId: '1bfb8dec-191e-4c34-9ef9-66dbfb724ddd',
+    actionLabel: 'Ask AYA bot',
     blockers: [
       {
         id: 'aya-aws',
@@ -113,6 +122,9 @@ export const ventures: Venture[] = [
     website: 'https://deklutternow.com',
     kind: 'Buy / sell',
     status: 'blocked',
+    botName: 'DeKlutterNow',
+    botId: '618776fb-b8c2-4147-bf6a-b507baf3edbc',
+    actionLabel: 'Ask DeKlutter bot',
     blockers: [
       {
         id: 'dkn-gws',
@@ -142,6 +154,9 @@ export const ventures: Venture[] = [
     tagline: 'Tax-delinquent lead ops',
     kind: 'Lead ops',
     status: 'active',
+    botName: 'Curative Title - Real Estate',
+    botId: '878e788d-29fe-4a7b-8cec-7c0f7ea377e6',
+    actionLabel: 'Ask Curative bot',
     blockers: [],
     activity: [
       {

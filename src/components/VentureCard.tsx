@@ -1,5 +1,10 @@
-import { ChevronDown, ExternalLink, MapPin } from 'lucide-react'
+import { useState, type MouseEvent } from 'react'
+import { ChevronDown, ClipboardCopy, ExternalLink, MapPin } from 'lucide-react'
 import type { Venture } from '../data/ventures'
+import {
+  copyVenturePrompt,
+  dispatchVentureAction,
+} from '../lib/actionBridge'
 import { StatusPill } from './StatusPill'
 
 export function VentureCard({
@@ -13,6 +18,23 @@ export function VentureCard({
 }) {
   const topBlocker = venture.blockers[0]
   const recent = venture.activity.slice(0, 2)
+  const [actionStatus, setActionStatus] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function handleAction(e: MouseEvent) {
+    e.stopPropagation()
+    setBusy(true)
+    setActionStatus('Sending...')
+    const result = await dispatchVentureAction(venture)
+    setActionStatus(result.message)
+    setBusy(false)
+  }
+
+  async function handleCopy(e: MouseEvent) {
+    e.stopPropagation()
+    const result = await copyVenturePrompt(venture)
+    setActionStatus(result.message)
+  }
 
   return (
     <article
@@ -86,6 +108,32 @@ export function VentureCard({
           </ul>
         </div>
       </button>
+
+      <div className="border-t border-surface-800 px-5 py-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleAction}
+            disabled={busy}
+            className="rounded-xl bg-emerald-500/90 px-3.5 py-2 text-sm font-semibold text-surface-950 hover:bg-emerald-400 disabled:opacity-60"
+          >
+            {venture.actionLabel}
+          </button>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-surface-600 bg-surface-850 px-2.5 py-2 text-xs font-medium text-ink-200 hover:border-surface-500 hover:bg-surface-800"
+          >
+            <ClipboardCopy className="h-3.5 w-3.5" aria-hidden />
+            Copy prompt
+          </button>
+        </div>
+        {actionStatus && (
+          <p className="mt-2 text-xs text-ink-300" role="status">
+            {actionStatus}
+          </p>
+        )}
+      </div>
 
       {expanded && (
         <div className="border-t border-surface-700 px-5 pb-5 pt-4">

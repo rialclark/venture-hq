@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
-import { LayoutGrid } from 'lucide-react'
+import { LayoutGrid, Settings } from 'lucide-react'
 import { LAST_UPDATED, ventures } from './data/ventures'
 import { FilterChips, type FilterKey } from './components/FilterChips'
 import {
   BlockersPanel,
   collectOpenBlockers,
 } from './components/BlockersPanel'
+import { SettingsPanel } from './components/SettingsPanel'
 import { VentureCard } from './components/VentureCard'
 
 function formatLastUpdated(iso: string): string {
@@ -36,6 +37,7 @@ function needsAttention(v: (typeof ventures)[number]): boolean {
 export default function App() {
   const [filter, setFilter] = useState<FilterKey>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const openBlockers = useMemo(() => collectOpenBlockers(ventures), [])
 
@@ -81,12 +83,23 @@ export default function App() {
               Rial Clark. All ventures in one place.
             </p>
           </div>
-          <p className="text-sm text-ink-400">
-            Last updated{' '}
-            <time dateTime={LAST_UPDATED} className="text-ink-200">
-              {formatLastUpdated(LAST_UPDATED)}
-            </time>
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-ink-400">
+              Last updated{' '}
+              <time dateTime={LAST_UPDATED} className="text-ink-200">
+                {formatLastUpdated(LAST_UPDATED)}
+              </time>
+            </p>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              className="rounded-xl border border-surface-700 bg-surface-900/80 p-2 text-ink-300 hover:border-surface-600 hover:text-ink-100"
+              aria-label="Open settings"
+              title="Settings"
+            >
+              <Settings className="h-4 w-4" aria-hidden />
+            </button>
+          </div>
         </header>
 
         <div className="mb-6">
@@ -131,6 +144,8 @@ export default function App() {
           <code className="text-ink-300">isExample: true</code>.
         </footer>
       </div>
+
+      <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   )
 }
